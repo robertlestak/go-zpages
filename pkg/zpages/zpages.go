@@ -12,7 +12,7 @@ import (
 // ZPages contains the config params for health check endpoints
 type ZPages struct {
 	Drivers []interface{}
-	Status  map[string]interface{}
+	Status  func() map[string]interface{}
 }
 
 // Response contains an execution response
@@ -108,24 +108,43 @@ func (z *ZPages) Live(w http.ResponseWriter, r *http.Request) {
 	z.Up(w, r)
 }
 
+// statuszDefault sets default values on Status object before
+// returning to Statusz
+func statuszDefault(m map[string]interface{}, k, v string) map[string]interface{} {
+	if v == "" {
+		return m
+	}
+	var f bool
+	for kk := range m {
+		if kk == k {
+			f = true
+			break
+		}
+	}
+	if !f {
+		m[k] = v
+	}
+	return m
+}
+
+// statuszDefaults sets defaults and returns final map
+func statuszDefaults(m map[string]interface{}) map[string]interface{} {
+	if os.Getenv("ENV") == "" && os.Getenv("ENVIRONMENT") != "" {
+		os.Setenv("ENV", os.Getenv("ENVIRONMENT"))
+	}
+	m = statuszDefault(m, "Environment", os.Getenv("ENV"))
+	m = statuszDefault(m, "Version", os.Getenv("VERSION"))
+	return m
+}
+
 // Statusz returns the status object
 func (z *ZPages) Statusz(w http.ResponseWriter, r *http.Request) {
 	if z.Status == nil {
-		z.Status = make(map[string]interface{})
+		z.Status = func() map[string]interface{} {
+			return make(map[string]interface{})
+		}
 	}
-	v := os.Getenv("VERSION")
-	if _, ok := z.Status["Version"]; !ok && v != "" {
-		z.Status["Version"] = v
-	}
-	var env string
-	env = os.Getenv("ENV")
-	if env == "" {
-		env = os.Getenv("ENVIRONMENT")
-	}
-	if _, ok := z.Status["Environment"]; !ok && env != "" {
-		z.Status["Environment"] = env
-	}
-	jd, jerr := json.Marshal(z.Status)
+	jd, jerr := json.Marshal(statuszDefaults(z.Status()))
 	if jerr != nil {
 		http.Error(w, jerr.Error(), http.StatusInternalServerError)
 		return

@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/robertlestak/go-zpages/pkg/zpages"
 )
@@ -19,9 +20,12 @@ func main() {
 	z := &zpages.ZPages{Drivers: d}
 	// create status object
 	// VERSION and ENV environment variables added automatically
-	z.Status = map[string]interface{}{
-		"Arbitrary": "data",
-		"Foo":       "bar",
+	z.Status = func() map[string]interface{} {
+		return map[string]interface{}{
+			"Arbitrary": "data",
+			"Foo":       "bar",
+			"Time":      time.Now().String(),
+		}
 	}
 	// register HTTP handlers
 	z.HTTPHandlers()

@@ -22,9 +22,36 @@ It is recommended to use the same paths as defined in `HTTPHandlers` for consist
 
 ## Status Page
 
-In addition to dependency health checks, this package also creates a `/statusz` endpoint which returns a JSON `map[string]interface{}`.
+In addition to dependency health checks, this package also creates a `/statusz` endpoint.
+
+This is configurable by defining a `func() map[string]interface{}` that will return the desired values when `/statusz` is called.
 
 This is automatically populated with the environment variables `VERSION` and `ENV`, and additional key/value pairs can be added when initialized.
+
+For example:
+
+```
+z := new(zpages.ZPages)
+z.Status = func() map[string]interface{} {
+	return map[string]interface{}{
+		"Time":      time.Now().String(),
+		"Arbitrary": "data",
+		"Foo":       "bar",
+		"Dynamic":	func() string {
+			return internalDynamicDataAPI()
+		}
+	}
+}
+z.HTTPHandlers()
+
+// will produce:
+// {
+//		"Arbitrary": "data",
+//		"Foo": "bar",
+//		"Dynamic": "output from internalDynamicDataAPI()",
+//		"Time": "2020-10-23 14:16:48.522569 -0700 PDT m=+0.727506354"
+// }
+```
 
 ## Supported Drivers
 
