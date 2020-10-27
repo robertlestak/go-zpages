@@ -37,9 +37,7 @@ z.Status = func() map[string]interface{} {
 		"Time":      time.Now().String(),
 		"Arbitrary": "data",
 		"Foo":       "bar",
-		"Dynamic":	func() string {
-			return internalDynamicDataAPI()
-		}
+		"Dynamic":	internalDynamicDataAPI(),
 	}
 }
 z.HTTPHandlers()
@@ -50,7 +48,7 @@ z.HTTPHandlers()
 //		"Foo": "bar",
 //		"Dynamic": "output from internalDynamicDataAPI()",
 //		"Time": "2020-10-23 14:16:48.522569 -0700 PDT m=+0.727506354"
-// }
+//	}
 ```
 
 ## Supported Drivers
